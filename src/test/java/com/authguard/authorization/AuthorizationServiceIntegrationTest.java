@@ -52,9 +52,11 @@ class AuthorizationServiceIntegrationTest {
     }
 
     @Test
-    void seededManagerHasOrdersPermissions() {
+    void seededManagerHasReadButNotManageOnOrders() {
+        // orders:manage stays ADMIN-only after the V2 migration (see AbacPolicyEvaluator /
+        // OrderService): MANAGER's order access is region-scoped, not blanket.
         assertThat(authorizationService.hasPermission(BOB_SUB, "orders:read")).isTrue();
-        assertThat(authorizationService.hasPermission(BOB_SUB, "orders:manage")).isTrue();
+        assertThat(authorizationService.hasPermission(BOB_SUB, "orders:manage")).isFalse();
     }
 
     @Test
