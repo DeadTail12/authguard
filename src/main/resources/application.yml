@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: authguard
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Spring fetches Keycloak's public signing keys from here on startup
+          # and uses them to verify every incoming JWT's signature and claims.
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/authguard}
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:authguard}
+    username: ${DB_USER:authguard}
+    password: ${DB_PASSWORD:authguard}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate must never auto-generate or alter it.
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

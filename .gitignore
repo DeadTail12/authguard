@@ -1,0 +1,21 @@
+target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Env files that may hold local secrets
+.env
+.token
+app-stdout.log
+app-stderr.log
+app.pid

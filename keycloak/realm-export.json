@@ -1,0 +1,45 @@
+{
+  "realm": "authguard",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "clients": [
+    {
+      "clientId": "authguard-api",
+      "name": "AuthGuard API test client",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://localhost:8080/*"],
+      "webOrigins": ["*"]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Example",
+      "email": "alice@example.com",
+      "requiredActions": [],
+      "credentials": [
+        {"type": "password", "value": "alice123", "temporary": false}
+      ]
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Example",
+      "email": "bob@example.com",
+      "requiredActions": [],
+      "credentials": [
+        {"type": "password", "value": "bob123", "temporary": false}
+      ]
+    }
+  ]
+}

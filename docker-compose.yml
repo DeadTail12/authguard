@@ -1,0 +1,32 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.0
+    container_name: authguard-keycloak
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: authguard-postgres
+    environment:
+      POSTGRES_DB: authguard
+      POSTGRES_USER: authguard
+      POSTGRES_PASSWORD: authguard
+    ports:
+      - "5432:5432"
+    volumes:
+      - authguard-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authguard -d authguard"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  authguard-postgres-data:
