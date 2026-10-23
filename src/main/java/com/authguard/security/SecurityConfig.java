@@ -12,8 +12,10 @@ import org.springframework.security.web.SecurityFilterChain;
 /**
  * Turns this service into an OAuth2 Resource Server: every request must carry a JWT
  * that Spring validates against Keycloak's public keys (signature, expiry, issuer).
- * A missing/invalid token gets 401; a valid token without enough rights will get 403
- * once RBAC checks are added on top (Stage 3) — a valid token alone is not authorization.
+ * A missing/invalid token gets 401. A valid token without the right permission gets 403:
+ * the service layer calls {@code AuthorizationService.requirePermission(...)}, which throws
+ * {@code AccessDeniedException} — Spring Security's {@code ExceptionTranslationFilter} turns
+ * that into a 403 response automatically. A valid token alone is authentication, not authorization.
  */
 @Configuration
 @EnableWebSecurity
