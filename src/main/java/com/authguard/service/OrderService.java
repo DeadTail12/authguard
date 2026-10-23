@@ -1,5 +1,7 @@
 package com.authguard.service;
 
+import com.authguard.audit.AuthorizationAuditLogger;
+import com.authguard.audit.Decision;
 import com.authguard.authorization.AbacContext;
 import com.authguard.authorization.AbacPolicyEvaluator;
 import com.authguard.authorization.AttributeProvider;
@@ -29,16 +31,19 @@ public class OrderService {
     private final AuthorizationService authorizationService;
     private final AttributeProvider attributeProvider;
     private final AbacPolicyEvaluator abacPolicyEvaluator;
+    private final AuthorizationAuditLogger auditLogger;
 
     public OrderService(
             OrderRepository orderRepository,
             AuthorizationService authorizationService,
             AttributeProvider attributeProvider,
-            AbacPolicyEvaluator abacPolicyEvaluator) {
+            AbacPolicyEvaluator abacPolicyEvaluator,
+            AuthorizationAuditLogger auditLogger) {
         this.orderRepository = orderRepository;
         this.authorizationService = authorizationService;
         this.attributeProvider = attributeProvider;
         this.abacPolicyEvaluator = abacPolicyEvaluator;
+        this.auditLogger = auditLogger;
     }
 
     @Transactional(readOnly = true)
@@ -48,23 +53,45 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
 
-        if (!authorizationService.hasPermission(keycloakUserId, MANAGE_PERMISSION)
-                && !canViewOrder(keycloakUserId, order)) {
+        String resource = "order:" + orderId;
+        boolean allowed;
+        String reason;
+
+        if (authorizationService.hasPermission(keycloakUserId, MANAGE_PERMISSION)) {
+            allowed = true;
+            reason = "orders:manage grants access to any order";
+        } else {
+            String matchedRule = matchingAbacRule(keycloakUserId, order);
+            allowed = matchedRule != null;
+            reason = allowed
+                    ? "ABAC rule " + matchedRule + " matched"
+                    : "no ABAC rule matched (different region, not the owner)";
+        }
+
+        auditLogger.record(keycloakUserId, "view-order", resource, allowed ? Decision.ALLOW : Decision.DENY, reason);
+
+        if (!allowed) {
             throw new AccessDeniedException("Order " + orderId + " is not in your region and not yours");
         }
 
         return toResponse(order);
     }
 
-    private boolean canViewOrder(String keycloakUserId, Order order) {
+    /** Returns the name of the first ABAC rule that allows access, or {@code null} if none does. */
+    private String matchingAbacRule(String keycloakUserId, Order order) {
         AbacContext context = new AbacContext(
                 keycloakUserId,
                 attributeProvider.getSubjectRegion(keycloakUserId),
                 order.getOwnerKeycloakUserId(),
                 order.getRegion());
 
-        return abacPolicyEvaluator.evaluate(AbacPolicyEvaluator.RESOURCE_OWNER, context)
-                || abacPolicyEvaluator.evaluate(AbacPolicyEvaluator.SAME_REGION, context);
+        if (abacPolicyEvaluator.evaluate(AbacPolicyEvaluator.RESOURCE_OWNER, context)) {
+            return AbacPolicyEvaluator.RESOURCE_OWNER;
+        }
+        if (abacPolicyEvaluator.evaluate(AbacPolicyEvaluator.SAME_REGION, context)) {
+            return AbacPolicyEvaluator.SAME_REGION;
+        }
+        return null;
     }
 
     private static OrderResponse toResponse(Order order) {

@@ -1,5 +1,6 @@
 package com.authguard.service;
 
+import com.authguard.audit.AuthorizationAuditLogger;
 import com.authguard.authorization.AbacPolicyEvaluator;
 import com.authguard.authorization.AttributeProvider;
 import com.authguard.authorization.AuthorizationService;
@@ -54,9 +55,10 @@ class OrderServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        AuthorizationService authorizationService = new AuthorizationService(userRoleRepository);
+        AuthorizationAuditLogger auditLogger = new AuthorizationAuditLogger();
+        AuthorizationService authorizationService = new AuthorizationService(userRoleRepository, auditLogger);
         AttributeProvider attributeProvider = new AttributeProvider(userAttributesRepository);
-        orderService = new OrderService(orderRepository, authorizationService, attributeProvider, new AbacPolicyEvaluator());
+        orderService = new OrderService(orderRepository, authorizationService, attributeProvider, new AbacPolicyEvaluator(), auditLogger);
     }
 
     @Test

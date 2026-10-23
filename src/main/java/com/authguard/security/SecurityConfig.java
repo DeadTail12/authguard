@@ -26,6 +26,9 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
+                        // API documentation only, no data behind it — left open so it's easy to
+                        // explore. A production deployment should lock this down behind the gateway.
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
                 // No cookies/session involved, so CSRF protection (which guards session-based

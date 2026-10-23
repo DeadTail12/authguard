@@ -1,5 +1,6 @@
 package com.authguard.authorization;
 
+import com.authguard.audit.AuthorizationAuditLogger;
 import com.authguard.repository.UserRoleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,7 @@ class AuthorizationServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        authorizationService = new AuthorizationService(userRoleRepository);
+        authorizationService = new AuthorizationService(userRoleRepository, new AuthorizationAuditLogger());
     }
 
     @Test
